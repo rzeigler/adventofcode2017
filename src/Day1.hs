@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 module Day1
   ( run ) where
 
@@ -6,9 +7,9 @@ import Data.Char (digitToInt)
 import Data.Text (unpack)
 import Lib (Parseable(parse), multisolve, aperture)
 
-newtype NumberSeq = NumberSeq { getSeq :: [Int] } 
+type NumberSeq = [Int]
 instance Parseable NumberSeq where
-  parse = NumberSeq . fmap digitToInt . unpack
+  parse = fmap digitToInt . unpack
 
 same :: Eq a => [a] -> Bool
 same (a:b:xs) = a == b
@@ -16,9 +17,8 @@ same _ = undefined
 
 part1 :: NumberSeq -> Int
 -- part1 input | trace ("input was " ++ show (getSeq input)) False = undefined
-part1 input = solve pairs
-  where ns = getSeq input
-        pairs = [last ns, head ns] : aperture 2 ns
+part1 ns = solve pairs
+  where pairs = [last ns, head ns] : aperture 2 ns
         solve = sum . fmap head . filter same
 
 useable :: Eq a => Int -> Int -> [a] -> (Int, a) -> Bool
@@ -26,9 +26,8 @@ useable len offset ref (i, a) = ref !! idx == a
   where idx = (i + offset) `mod` len
 
 part2 :: NumberSeq -> Int
-part2 input = solve indexed
-  where ns = getSeq input 
-        len = length ns
+part2 ns = solve indexed
+  where len = length ns
         indexed = zip [0..len-1] ns
         solve = sum . fmap snd . filter (useable len (quot len 2) ns)
         
