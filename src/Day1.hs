@@ -1,5 +1,5 @@
 module Day1
-  ( main1 ) where
+  ( main1, main2 ) where
 
 import Debug.Trace (trace)
 import Data.Char (digitToInt)
@@ -22,3 +22,17 @@ part1 input = solve pairs
         solve = sum . fmap head . filter same
 main1 :: IO ()
 main1 = solve part1
+
+useable :: Eq a => Int -> Int -> [a] -> (Int, a) -> Bool
+useable len offset ref (i, a) = ref !! idx == a
+  where idx = (i + offset) `mod` len
+
+part2 :: NumberSeq -> Int
+part2 input = solve indexed
+  where ns = getSeq input 
+        len = length ns
+        indexed = zip [0..len-1] ns
+        solve = sum . fmap snd . filter (useable len (quot len 2) ns)
+        
+main2 :: IO ()
+main2 = solve part2
