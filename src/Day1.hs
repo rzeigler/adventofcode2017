@@ -1,10 +1,10 @@
 module Day1
-  ( main1, main2 ) where
+  ( run ) where
 
 import Debug.Trace (trace)
 import Data.Char (digitToInt)
 import Data.Text (unpack)
-import Lib (Parseable(parse), solve, aperture)
+import Lib (Parseable(parse), multisolve, aperture)
 
 newtype NumberSeq = NumberSeq { getSeq :: [Int] } 
 instance Parseable NumberSeq where
@@ -20,8 +20,6 @@ part1 input = solve pairs
   where ns = getSeq input
         pairs = [last ns, head ns] : aperture 2 ns
         solve = sum . fmap head . filter same
-main1 :: IO ()
-main1 = solve part1
 
 useable :: Eq a => Int -> Int -> [a] -> (Int, a) -> Bool
 useable len offset ref (i, a) = ref !! idx == a
@@ -34,5 +32,5 @@ part2 input = solve indexed
         indexed = zip [0..len-1] ns
         solve = sum . fmap snd . filter (useable len (quot len 2) ns)
         
-main2 :: IO ()
-main2 = solve part2
+run :: IO ()
+run = multisolve [part1, part2]
