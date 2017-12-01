@@ -20,7 +20,7 @@ class Parseable a where
 solve :: Parseable a => TextShow b => Compute a b -> IO ()
 solve c = interact (toText . showb . c . parse . strip)
 
-aperture :: Show a => Int -> [a] -> [[a]]
+aperture :: Int -> [a] -> [[a]]
 aperture len [] = []
 aperture len as = if length win == len 
     then win : aperture len (drop 1 as)
