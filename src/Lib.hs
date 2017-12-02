@@ -3,13 +3,15 @@ module Lib
       Parseable(parse),
       solve,
       multisolve,
-      aperture
+      aperture,
+      allPass
     ) 
     where
 
 import Debug.Trace (trace)
 import Control.Arrow ((&&&))
 import Prelude hiding (interact)
+import Data.List (find)
 import Data.Text.IO (interact)
 import Data.Text (Text, strip)
 import TextShow (TextShow(showb), toText)
@@ -31,3 +33,7 @@ aperture len as = if length win == len
     then win : aperture len (drop 1 as)
     else []
   where win = take len as
+  
+-- is there a library function that does this
+allPass :: [a -> Bool] -> a -> Bool
+allPass preds a = and (preds <*> [a])

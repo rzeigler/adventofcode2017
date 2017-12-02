@@ -1,0 +1,2 @@
+#!/usr/bin/env fish
+stack build; and cat problems/$argv[1] | stack exec $argv[1]
