@@ -9,7 +9,6 @@ import Data.Text (unpack)
 import Data.List (find)
 import Lib (Parseable(parse), multisolve)
 
-  
 instance Parseable Int where
   parse = read . unpack
   
