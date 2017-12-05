@@ -1,2 +1,1 @@
-#!/usr/bin/env fish
-stack build aoc2017:$argv[1]; and cat problems/$argv[1] | stack exec $argv[1]
+stack build aoc2017:$1 && cat problems/$1 | stack exec $1

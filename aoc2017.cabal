@@ -24,9 +24,13 @@ library
                      , Day2
                      , Day3
                      , Day4
+                     , Day5
   build-depends:       base >= 4.7 && < 5
                      , text
                      , text-show
+                     , vector
+                     , mtl
+                     , transformers
   default-language:    Haskell2010
 
 executable day1
@@ -67,6 +71,19 @@ executable day4
                      , text
                      , text-show
                      , aoc2017
+  default-language:    Haskell2010
+  
+executable day5
+  hs-source-dirs:      day5
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , text
+                     , text-show
+                     , aoc2017
+                     , vector
+                     , mtl
+                     , transformers
   default-language:    Haskell2010
 
 test-suite aoc2017-test
