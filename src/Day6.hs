@@ -26,19 +26,19 @@ realloc r start mem = if r == 0
   
 compute :: ([Mem], Int) -> Mem -> ([Mem], Int)
 compute (history, ct) cur = if cur `elem` history 
-  then (history, ct)
+  then (cur:history, ct)
   else compute (cur:history, ct + 1) (realloc blks (idx + 1) (cur // [(idx, 0)]))
     where blks = maximum cur
           idx = maxIndex cur
         
           
-solve1 :: Mem -> Int
-solve1 = snd . compute ([], 0)
+solve1 :: Mem -> Maybe Int
+solve1 = Just . snd . compute ([], 0)
 
-solve2 :: Mem -> Int
+solve2 :: Mem -> Maybe Int
 solve2 mem = 
-  let (history, _) = compute ([], 0) mem
-  in snd $ compute ([], 0) (last history)
+  let (cur:history, ct) = compute ([], 0) mem
+  in (ct - 1 -) <$> elemIndex cur history 
   
 run :: IO ()
 run = multisolve [solve1, solve2]
