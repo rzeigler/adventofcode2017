@@ -4,6 +4,7 @@ where
 
 import Prelude hiding (maximum)
 import Debug.Trace (trace)
+import Data.List (elemIndex)
 import Data.Vector (Vector, fromList, maxIndex, maximum, (!), (//))
 import Data.Text (Text, lines, splitOn, unpack, pack)
 import Lib (Parseable(parse), multisolve)
@@ -33,6 +34,11 @@ compute (history, ct) cur = if cur `elem` history
           
 solve1 :: Mem -> Int
 solve1 = snd . compute ([], 0)
+
+solve2 :: Mem -> Int
+solve2 mem = 
+  let (history, _) = compute ([], 0) mem
+  in snd $ compute ([], 0) (last history)
   
 run :: IO ()
-run = multisolve [solve1]
+run = multisolve [solve1, solve2]
