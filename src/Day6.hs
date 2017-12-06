@@ -38,7 +38,8 @@ solve1 = Just . snd . compute ([], 0)
 solve2 :: Mem -> Maybe Int
 solve2 mem = 
   let (cur:history, ct) = compute ([], 0) mem
-  in (ct - 1 -) <$> elemIndex cur history 
+      ordered = reverse history
+  in (ct -) <$> elemIndex cur ordered 
   
 run :: IO ()
 run = multisolve [solve1, solve2]
