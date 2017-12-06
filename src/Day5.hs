@@ -8,7 +8,7 @@ import Control.Monad.State (State, state, evalState)
 import Data.Vector (Vector, fromList, (!?), (//))
 import Data.Vector.Mutable (write)
 import Data.Text (Text, lines, unpack)
-import Lib (Parseable(parse), multisolve, newline)
+import Lib (Parseable(parse), multisolve)
 
 data VM = VM { getMem :: Vector Int, getOffset :: Int, getJumps :: Int }
   deriving (Show)

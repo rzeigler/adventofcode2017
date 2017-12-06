@@ -5,8 +5,6 @@ module Lib
       multisolve,
       aperture,
       allPass,
-      newline,
-      space
     ) 
     where
 
@@ -23,6 +21,9 @@ type Compute a b = a -> b
 class Parseable a where
   parse :: Text -> a
   
+instance Parseable Text where
+  parse = id
+  
 solve :: Parseable a => TextShow b => Compute a b -> IO ()
 solve c = interact (toText . showb . c . parse . strip)
 
@@ -35,12 +36,6 @@ aperture len as = if length win == len
     then win : aperture len (drop 1 as)
     else []
   where win = take len as
-  
-newline :: Text
-newline = pack "\n"
-
-space :: Text
-space = pack " "
   
 -- is there a library function that does this
 allPass :: [a -> Bool] -> a -> Bool
