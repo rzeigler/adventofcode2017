@@ -105,6 +105,8 @@ executable day7
                      , text-show
                      , aoc2017
                      , parsec
+                     , containers
+                     , mtl
   default-language:    Haskell2010
 
 
