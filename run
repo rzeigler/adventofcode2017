@@ -1,2 +1,2 @@
 #!/usr/bin/env zsh
-stack build aoc2017:$1 && cat problems/$1 | stack exec $1
+stack build aoc2017:exe:$1 && cat problems/$1 | stack exec $1

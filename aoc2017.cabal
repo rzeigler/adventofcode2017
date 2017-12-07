@@ -20,22 +20,15 @@ description:         Please see the README on Github at <https://github.com/gith
 library
   hs-source-dirs:      src
   exposed-modules:     Lib
-                     , Day1
-                     , Day2
-                     , Day3
-                     , Day4
-                     , Day5
-                     , Day6
   build-depends:       base >= 4.7 && < 5
                      , text
                      , text-show
-                     , vector
-                     , mtl
   default-language:    Haskell2010
   
 executable day1
   hs-source-dirs:      day1
   main-is:             Main.hs
+  other-modules:       Day1
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , text
@@ -46,6 +39,7 @@ executable day1
 executable day2
   hs-source-dirs:      day2
   main-is:             Main.hs
+  other-modules:       Day2
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , text
@@ -56,6 +50,7 @@ executable day2
 executable day3
   hs-source-dirs:      day3
   main-is:             Main.hs
+  other-modules:       Day3
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , text
@@ -66,6 +61,7 @@ executable day3
 executable day4
   hs-source-dirs:      day4
   main-is:             Main.hs
+  other-modules:       Day4
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , text
@@ -76,6 +72,7 @@ executable day4
 executable day5
   hs-source-dirs:      day5
   main-is:             Main.hs
+  other-modules:       Day5
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , text
@@ -88,22 +85,24 @@ executable day5
 executable day6
   hs-source-dirs:      day6
   main-is:             Main.hs
+  other-modules:       Day6
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , text
                      , text-show
                      , aoc2017
                      , transformers
+                     , vector
   default-language:    Haskell2010
 
-test-suite aoc2017-test
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-  build-depends:       base
-                     , aoc2017
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  default-language:    Haskell2010
+-- test-suite aoc2017-test
+--   type:                exitcode-stdio-1.0
+--   hs-source-dirs:      test
+--   main-is:             Spec.hs
+--   build-depends:       base
+--                      , aoc2017
+--   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+--   default-language:    Haskell2010
 
 source-repository head
   type:     git
