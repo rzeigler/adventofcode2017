@@ -10,7 +10,7 @@ import Data.Traversable (traverse)
 import Data.Functor (($>))
 import Data.Maybe (fromMaybe)
 import Control.Applicative ((<|>))
-import Control.Monad.State (State, get, put, evalState, execState, modify)
+import Control.Monad.State (State, get, gets, put, evalState, execState, modify)
 import Data.Map.Strict (Map, alter, empty, lookup, foldr, insert)
 import Text.Parsec (eof)
 import Text.Parsec.Prim (try)
@@ -72,9 +72,7 @@ instance Parsecable [Instruction] where
   parsec = instructions
   
 getRegisterValue :: Register -> State (Map Register Int) Int
-getRegisterValue r = do 
-  mem <- get
-  return (fromMaybe 0 (lookup r mem))
+getRegisterValue r = gets (fromMaybe 0 . lookup r)
   
 isConditionSatisfied :: Condition -> State (Map Register Int) Bool
 isConditionSatisfied c = do
@@ -95,7 +93,6 @@ step i = do
   isSatisfied <- isConditionSatisfied (getCondition i)
   if isSatisfied then execute i else return minBound
   
-
 compile :: [Instruction] -> State (Map Register Int) [Int]
 compile = traverse step
 
