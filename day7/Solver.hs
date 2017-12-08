@@ -20,7 +20,7 @@ import Text.Parsec.Prim (try)
 import Text.Parsec.Text (Parser)
 import Text.Parsec.Char (string, letter, digit, char, spaces, newline)
 import Text.Parsec.Combinator (many1, sepBy1)
-import Lib (multisolve)
+import Lib (Parsecable(..), parsecer, multisolve)
 
 data InputLine = InputLine { getName :: Text, getWeight :: Int, getStackedOn :: [Text]}
   deriving (Show)
@@ -46,6 +46,9 @@ prog = try (newProg <$> (name <* spaces) <*> (weight <* spaces) <*> (right *> sp
   
 progs :: Parser [InputLine]
 progs = sepBy1 prog newline <* eof
+
+instance Parsecable [InputLine] where
+  parsec = progs
 
 -- instance Parseable (Either ParseError [InputLine]) where
 parse :: Text -> Either (FromStringShow ParseError) [InputLine]
@@ -136,4 +139,4 @@ solve2 :: [InputLine] -> Text
 solve2 = runReader impl2 . load
 
 run :: IO ()
-run = multisolve parse [solve1, solve2]
+run = multisolve parsecer [solve1, solve2]

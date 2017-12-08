@@ -1,6 +1,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Lib
-    ( multisolve
+    ( Parsecable(..)
+    , multisolve
+    , parsecer
     , aperture
     , allPass 
     ) where
@@ -8,15 +10,16 @@ module Lib
 import Debug.Trace (trace)
 import Control.Arrow ((&&&))
 import Prelude hiding (interact, unlines)
-import Data.Bifunctor (bimap)
+import Data.Bifunctor (first, bimap)
+import Text.Parsec (ParseError, parse)
+import Text.Parsec.Text (Parser)
 import Data.List (find)
 import Data.Text.IO (interact)
 import Data.Text (Text, strip, pack, unlines, append)
-import TextShow (TextShow(showb, showt), toText)
+import TextShow (TextShow(showt), FromStringShow(..))
 
-solve :: [a -> b] -> a -> [b]
-solve solns = (solns <*>) . return
-
+class Parsecable a where
+  parsec :: Parser a
 -- Cannot typecheck :-(  
 -- multisolve :: (TextShow e, TextShow b, Parseable e a) => [a -> b] -> IO ()
 -- multisolve solns = interact $ 
@@ -31,12 +34,17 @@ renderLine (part, t) = foldl append (pack "Part ") [showt part, pack " = ", t]
 render :: TextShow a => [a] -> Text
 render as = unlines $ renderLine <$> zip [0..] (showt <$> as)
 
+solve :: [a -> b] -> a -> [b]
+solve solns = (solns <*>) . return
 
 multisolve :: TextShow e => TextShow b => (Text -> Either e a) -> [a -> b] -> IO ()
 multisolve load solns = interact $
   either showt render .
   fmap ((solns <*>) . return) .
   load . strip
+  
+parsecer :: Parsecable a => Text -> Either (FromStringShow ParseError) a
+parsecer text = first FromStringShow $ parse parsec "" text
 
 aperture :: Int -> [a] -> [[a]]
 aperture len [] = []
