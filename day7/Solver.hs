@@ -2,15 +2,17 @@
 module Solver (run)
 where
 
+import Prelude hiding (unwords)
 import Debug.Trace (trace)
 import TextShow (FromStringShow(..), showt)
-import Control.Monad (join)
-import Data.Text (Text, pack)
+import Control.Monad (join, filterM)
+import Data.Text (Text, pack, unwords)
 import Data.Set (fromList, difference)
-import Control.Monad.Reader (Reader, asks)
+import Control.Monad.Reader (Reader, asks, runReader)
 import Data.Map.Strict (Map, insert, empty, (!))
 import Data.Functor (($>))
 import Control.Applicative ((<|>))
+import Data.Maybe (listToMaybe)
 import Text.Parsec (Parsec, ParseError, parse, eof)
 import Text.Parsec.Prim (try)
 import Text.Parsec.Text (Parser)
@@ -18,11 +20,11 @@ import Text.Parsec.Char (string, letter, digit, char, spaces, newline)
 import Text.Parsec.Combinator (many1, sepBy1)
 import Lib (Parseable(parse), multisolve)
 
-data InputLine = InputLine { getName :: Text, getWeight :: Int, getChildren :: [Text]}
+data InputLine = InputLine { getName :: Text, getWeight :: Int, getStackedOn :: [Text]}
   deriving (Show)
   
 newProg :: Text -> Int -> [Text] -> InputLine
-newProg name weight children = InputLine { getName = name, getWeight = weight, getChildren = children }
+newProg name weight children = InputLine { getName = name, getWeight = weight, getStackedOn = children }
 
 name :: Parser Text
 name = pack <$> many1 letter
@@ -61,7 +63,7 @@ mkWeightInsert :: InputLine -> Map Text Int -> Map Text Int
 mkWeightInsert input = insert (getName input) (getWeight input)
 
 mkEdges :: InputLine -> [Edge]
-mkEdges input = fmap (Edge (getName input)) (getChildren input) 
+mkEdges input = fmap (Edge (getName input)) (getStackedOn input) 
 
 load :: [InputLine] -> Data
 load inputs = Data { getNodes = nodes, getWeights = weights, getEdges = edges }
@@ -76,42 +78,59 @@ impl1 inputs = showt $ FromStringShow $ difference (fromList $ getNodes d) (from
 solve1 :: Either ParseError [InputLine] -> FromStringShow (Either ParseError Text)
 solve1 = FromStringShow . fmap impl1
 
+getNodeWeight :: Text -> Reader Data Int
+getNodeWeight node = asks $ (! node) . getWeights
+
 getNodeChildren :: Text -> Reader Data [Text]
 getNodeChildren parent = asks $ fmap getEdgeEnd . filter startsAtParent . getEdges
   where startsAtParent = (parent ==) . getEdgeStart
-
-getLeaves :: Reader Data [Text]
-getLeaves = do
-  parents <- asks $ fmap getEdgeStart . getEdges
-  asks $ filter (not . (`elem` parents)) . getNodes
   
-getNodeWeight :: Text -> Reader Data Int
-getNodeWeight node = asks ((! node) . getWeights)
-  
-getDescendants :: Text -> Reader Data [Text]
-getDescendants root = do
+getNodeDescendants :: Text -> Reader Data [Text]
+getNodeDescendants root = do
   children <- getNodeChildren root
-  descendants <- join <$> traverse getNodeChildren children
-  return (children ++ descendants)
+  (children ++) . join <$> traverse getNodeDescendants children
   
-getDescendantsWeight :: Text -> Reader Data Int
-getDescendantsWeight root = do
-  descendants <- getDescendants root
+getNodeDescendantsWeight :: Text -> Reader Data Int
+getNodeDescendantsWeight root = do
+  descendants <- getNodeDescendants root
   sum <$> traverse getNodeWeight descendants
   
-data ChildAnalysis = ChildAnalysis Text Int Int
+getNodeParent :: Text -> Reader Data (Maybe Text)
+getNodeParent child = asks $ listToMaybe . fmap getEdgeStart . filter endsAtChild . getEdges
+  where endsAtChild = (child ==) . getEdgeEnd
   
-analyzeNode :: Text -> Reader Data ()
-analyzeNode node = do
-  children <- getNodeChildren node
-  weights <- traverse getNodeWeight children
-  subWeights <- traverse getDescendantsWeight children
-  let analysis = zipWith3 ChildAnalysis children weights subWeights
-  return ()
-  
-impl2 :: [InputLine] -> Text
-impl2 inputs = undefined
-  where d = load inputs
+getNodeSiblings :: Text -> Reader Data [Text]
+getNodeSiblings sibling = do
+   parent <- getNodeParent sibling
+   maybe (return []) (fmap (filter (/= sibling)) . getNodeChildren) parent
+
+hasChildren :: Text -> Reader Data Bool
+hasChildren = fmap (not . null) . getNodeChildren
+
+correction :: Text -> Reader Data Int
+correction node = do
+  sibs <- getNodeSiblings node
+  weight <- getNodeWeight node
+  descendantWeight <- getNodeDescendantsWeight node
+  sibWeights <- traverse getNodeWeight sibs
+  sibDescendantWeights <- traverse getNodeDescendantsWeight sibs
+  let sibStats = zip sibWeights sibDescendantWeights
+  let sibTots = uncurry (+) <$> sibStats
+  let mismatched = filter (/= weight + descendantWeight) sibTots
+  case mismatched of
+    f:_:_ -> return (f - descendantWeight)
+    _ -> return 0
+
+impl2 :: Reader Data Text
+impl2 = do
+  nodes <- asks getNodes
+  internal <- filterM hasChildren nodes
+  corrections <- traverse correction internal
+  let candidates = filter (0<) corrections
+  return (unwords $ fmap showt candidates)
+
+solve2 :: Either ParseError [InputLine] -> FromStringShow (Either ParseError Text)
+solve2 = FromStringShow . fmap (runReader impl2 . load)
 
 run :: IO ()
-run = multisolve [solve1]
+run = multisolve [solve1, solve2]
