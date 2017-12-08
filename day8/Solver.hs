@@ -6,10 +6,12 @@ module Solver
 import Debug.Trace (trace)
 import Prelude hiding (lookup)
 import Data.Text (Text, pack)  
+import Data.Traversable (traverse)
 import Data.Functor (($>))
 import Data.Maybe (fromMaybe)
 import Control.Applicative ((<|>))
-import Data.Map.Strict (Map, alter, empty, lookup, foldr)
+import Control.Monad.State (State, get, put, evalState, execState, modify)
+import Data.Map.Strict (Map, alter, empty, lookup, foldr, insert)
 import Text.Parsec (eof)
 import Text.Parsec.Prim (try)
 import Text.Parsec.Text (Parser)
@@ -73,25 +75,41 @@ instructions = sepBy1 instruction newline <* eof
 instance Parsecable [Instruction] where
   parsec = instructions
   
-getRegisterValue :: Register -> Map Register Int -> Int
-getRegisterValue r = fromMaybe 0 . lookup r
+getRegisterValue :: Register -> State (Map Register Int) Int
+getRegisterValue r = do 
+  mem <- get
+  return (fromMaybe 0 (lookup r mem))
+  
+isConditionSatisfied :: Condition -> State (Map Register Int) Bool
+isConditionSatisfied c = do
+  val <- getRegisterValue (getRegister c)
+  return (getComparison c val (getValue c))
 
-satisfied :: Condition -> Map Register Int -> Bool
-satisfied c m = getComparison c (getRegisterValue (getRegister c) m) (getValue c)
+execute :: Instruction -> State (Map Register Int) Int
+execute i = let target = getTarget i in
+  do
+    val <- getRegisterValue (getTarget i)
+    let val' = getAdjust i val
+    modify (insert target val')
+    return val'
   
-modify :: Register -> Adjust -> Map Register Int -> Map Register Int
-modify r o = alter (Just . o . fromMaybe 0) r
+step :: Instruction -> State (Map Register Int) Int
+step i = do
+  mem <- get
+  isSatisfied <- isConditionSatisfied (getCondition i)
+  if isSatisfied then execute i else return minBound
   
-pipe = flip (.)
-  
-execute :: Instruction -> Map Register Int -> Map Register Int
-execute i mem = if not $ satisfied (getCondition i) mem 
-    then mem
-    else modify (getTarget i) (getAdjust i) mem
+
+compile :: [Instruction] -> State (Map Register Int) [Int]
+compile = traverse step
 
 solve1 :: [Instruction] -> Int
-solve1 input = Data.Map.Strict.foldr max minBound (exec empty)
-  where exec = foldl1 pipe (execute <$> input)
+solve1 input = Data.Map.Strict.foldr max minBound $ execState program empty
+  where program = compile input
+  
+solve2 :: [Instruction] -> Int
+solve2 input = Prelude.foldr max minBound $ evalState program empty
+  where program = compile input
 
 run :: IO ()
-run = multisolve parsecer [solve1]
+run = multisolve parsecer [solve1, solve2]
