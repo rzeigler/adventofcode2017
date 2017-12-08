@@ -2,15 +2,16 @@
 module Day4 (run)
 where
 
+import Prelude hiding (lines, words)
 import Data.List (sort)
-import Data.Text (Text, pack, unpack, splitOn)
-import Lib (Parseable(parse), multisolve)
+import Data.Text (Text, pack, unpack, splitOn, lines, words)
+import Lib (multisolve)
 
 space = pack " "
 newline = pack "\n"
 
-instance Parseable [[Text]] where
-  parse = fmap (splitOn space) . splitOn newline
+parse :: Text -> Either () [[Text]]
+parse = Right . fmap words . lines
 
 cart :: [a] -> [b] -> [(a, b)]
 cart as bs = [(a, b) | a <- as, b <- bs]
@@ -29,4 +30,4 @@ solve2 :: [[Text]] -> Int
 solve2 = solve1 . fmap (fmap sortLetters)
 
 run :: IO ()
-run = multisolve [solve1, solve2]
+run = multisolve parse [solve1, solve2]

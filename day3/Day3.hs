@@ -5,13 +5,13 @@ import Debug.Trace (trace)
 import Control.Arrow ((***))
 import Control.Applicative (pure, (<*>))
 import Data.Monoid
-import Data.Text (unpack)
+import Data.Text (Text, unpack)
 import Data.List (find)
-import Lib (Parseable(parse), multisolve)
+import Lib (multisolve)
 
-instance Parseable Int where
-  parse = read . unpack
-  
+parse :: Text -> Either () Int
+parse = Right . read . unpack
+
 data Bearing = PosX | NegX | PosY | NegY
   deriving (Show)
 
@@ -101,4 +101,4 @@ solve2 :: Int -> Int
 solve2 v = impl2 v [Cell{getAddr = (0, 0), getValue = 1}] segments (1, 0)
   
 run :: IO ()
-run = multisolve [solve1, solve2]
+run = multisolve parse [solve1, solve2]

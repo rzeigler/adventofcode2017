@@ -4,12 +4,13 @@ module Day1
 
 import Debug.Trace (trace)
 import Data.Char (digitToInt)
-import Data.Text (unpack)
-import Lib (Parseable(parse), multisolve, aperture)
+import Data.Text (Text, unpack)
+import Lib (multisolve, aperture)
 
 type NumberSeq = [Int]
-instance Parseable NumberSeq where
-  parse = fmap digitToInt . unpack
+
+parse :: Text -> Either () NumberSeq
+parse = Right . fmap digitToInt . unpack
 
 same :: Eq a => [a] -> Bool
 same (a:b:xs) = a == b
@@ -32,4 +33,4 @@ part2 ns = solve indexed
         solve = sum . fmap snd . filter (useable len (quot len 2) ns)
         
 run :: IO ()
-run = multisolve [part1, part2]
+run = multisolve parse [part1, part2]

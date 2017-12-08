@@ -6,6 +6,7 @@ import Prelude hiding (unwords)
 import Debug.Trace (trace)
 import TextShow (FromStringShow(..), showt)
 import Control.Monad (join, filterM)
+import Data.Bifunctor (first)
 import Data.Text (Text, pack, unwords)
 import Data.Set (fromList, difference)
 import Control.Monad.Reader (Reader, asks, runReader)
@@ -13,12 +14,13 @@ import Data.Map.Strict (Map, insert, empty, (!))
 import Data.Functor (($>))
 import Control.Applicative ((<|>))
 import Data.Maybe (listToMaybe)
-import Text.Parsec (Parsec, ParseError, parse, eof)
+import Text.Parsec (Parsec, ParseError, eof)
+import qualified Text.Parsec as Parsec
 import Text.Parsec.Prim (try)
 import Text.Parsec.Text (Parser)
 import Text.Parsec.Char (string, letter, digit, char, spaces, newline)
 import Text.Parsec.Combinator (many1, sepBy1)
-import Lib (Parseable(parse), multisolve)
+import Lib (multisolve)
 
 data InputLine = InputLine { getName :: Text, getWeight :: Int, getStackedOn :: [Text]}
   deriving (Show)
@@ -45,8 +47,9 @@ prog = try (newProg <$> (name <* spaces) <*> (weight <* spaces) <*> (right *> sp
 progs :: Parser [InputLine]
 progs = sepBy1 prog newline <* eof
 
-instance Parseable (Either ParseError [InputLine]) where
-  parse = Text.Parsec.parse progs ""
+-- instance Parseable (Either ParseError [InputLine]) where
+parse :: Text -> Either (FromStringShow ParseError) [InputLine]
+parse = first FromStringShow . Parsec.parse progs ""
   
 data Edge = Edge Text Text
   deriving (Show)
@@ -75,8 +78,8 @@ impl1 :: [InputLine] -> Text
 impl1 inputs = showt $ FromStringShow $ difference (fromList $ getNodes d) (fromList $ getEdgeEnd <$> getEdges d)
   where d = load inputs
   
-solve1 :: Either ParseError [InputLine] -> FromStringShow (Either ParseError Text)
-solve1 = FromStringShow . fmap impl1
+solve1 :: [InputLine] -> Text
+solve1 = impl1
 
 getNodeWeight :: Text -> Reader Data Int
 getNodeWeight node = asks $ (! node) . getWeights
@@ -129,8 +132,8 @@ impl2 = do
   let candidates = filter ((0<) . snd) corrections
   return (unwords $ fmap showt candidates)
 
-solve2 :: Either ParseError [InputLine] -> FromStringShow (Either ParseError Text)
-solve2 = FromStringShow . fmap (runReader impl2 . load)
+solve2 :: [InputLine] -> Text
+solve2 = runReader impl2 . load
 
 run :: IO ()
-run = multisolve [solve1, solve2]
+run = multisolve parse [solve1, solve2]

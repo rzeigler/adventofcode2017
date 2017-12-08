@@ -7,12 +7,12 @@ import Debug.Trace (trace)
 import Data.List (elemIndex)
 import Data.Vector (Vector, fromList, maxIndex, maximum, (!), (//))
 import Data.Text (Text, lines, splitOn, unpack, pack)
-import Lib (Parseable(parse), multisolve)
+import Lib (multisolve)
 
 type Mem = Vector Int
 
-instance Parseable Mem where
-  parse = fromList . fmap (read . unpack) . splitOn (pack "\t")
+parse :: Text -> Either () Mem
+parse = Right . fromList . fmap (read . unpack) . splitOn (pack "\t")
 
 move :: [Int] -> Mem -> Mem
 move idxs mem = mem // fmap (\i -> (i, (mem ! i) + 1)) idxs
@@ -42,4 +42,4 @@ solve2 mem =
   in (ct -) <$> elemIndex cur ordered 
   
 run :: IO ()
-run = multisolve [solve1, solve2]
+run = multisolve parse [solve1, solve2]

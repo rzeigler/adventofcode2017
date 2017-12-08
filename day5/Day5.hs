@@ -8,7 +8,7 @@ import Control.Monad.State (State, state, evalState)
 import Data.Vector (Vector, fromList, (!?), (//))
 import Data.Vector.Mutable (write)
 import Data.Text (Text, lines, unpack)
-import Lib (Parseable(parse), multisolve)
+import Lib (multisolve)
 
 data VM = VM { getMem :: Vector Int, getOffset :: Int, getJumps :: Int }
   deriving (Show)
@@ -25,8 +25,8 @@ update :: Int -> Int
 update move | move >= 3 = move - 1
 update move = move + 1
 
-instance Parseable VM where
-  parse = (\js -> VM { getMem = js, getOffset = 0, getJumps = 0}) . fromList . fmap (read . unpack) . lines
+parse :: Text -> Either () VM
+parse = Right . (\js -> VM { getMem = js, getOffset = 0, getJumps = 0}) . fromList . fmap (read . unpack) . lines
   
 execute :: State VM (Int, Bool)
 execute = head . dropWhile (not . snd) <$> sequence (repeat (state (step (+1))))
@@ -41,4 +41,4 @@ solve2 :: VM -> Int
 solve2 = fst . evalState execute'
 
 run :: IO ()
-run = multisolve [solve1, solve2]
+run = multisolve parse [solve1, solve2]

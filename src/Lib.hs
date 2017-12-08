@@ -1,34 +1,42 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Lib
-    ( Compute,
-      Parseable(parse),
-      solve,
-      multisolve,
-      aperture,
-      allPass,
-    ) 
-    where
+    ( multisolve
+    , aperture
+    , allPass 
+    ) where
 
 import Debug.Trace (trace)
 import Control.Arrow ((&&&))
-import Prelude hiding (interact)
+import Prelude hiding (interact, unlines)
+import Data.Bifunctor (bimap)
 import Data.List (find)
 import Data.Text.IO (interact)
-import Data.Text (Text, strip, pack)
-import TextShow (TextShow(showb), toText)
+import Data.Text (Text, strip, pack, unlines, append)
+import TextShow (TextShow(showb, showt), toText)
 
-type Compute a b = a -> b
+solve :: [a -> b] -> a -> [b]
+solve solns = (solns <*>) . return
 
-class Parseable a where
-  parse :: Text -> a
-  
-instance Parseable Text where
-  parse = id
-  
-solve :: Parseable a => TextShow b => Compute a b -> IO ()
-solve c = interact (toText . showb . c . parse . strip)
+-- Cannot typecheck :-(  
+-- multisolve :: (TextShow e, TextShow b, Parseable e a) => [a -> b] -> IO ()
+-- multisolve solns = interact $ 
+--   \text -> 
+--     let result = ((solns <*>) . return) <$> (parse $ strip text) in
+--     either showt (unlines . fmap showt) result
+-- 
 
-multisolve :: Parseable a => TextShow b => [Compute a b] -> IO ()
-multisolve runs = interact (toText . showb . (runs <*>) . return . parse . strip)
+renderLine :: (Int, Text) -> Text
+renderLine (part, t) = foldl append (pack "Part ") [showt part, pack " = ", t]
+
+render :: TextShow a => [a] -> Text
+render as = unlines $ renderLine <$> zip [0..] (showt <$> as)
+
+
+multisolve :: TextShow e => TextShow b => (Text -> Either e a) -> [a -> b] -> IO ()
+multisolve load solns = interact $
+  either showt render .
+  fmap ((solns <*>) . return) .
+  load . strip
 
 aperture :: Int -> [a] -> [[a]]
 aperture len [] = []
@@ -39,4 +47,7 @@ aperture len as = if length win == len
   
 -- is there a library function that does this
 allPass :: [a -> Bool] -> a -> Bool
-allPass preds a = and (preds <*> [a])
+allPass = (and .) . sequence
+
+anyPass :: [a -> Bool] -> a -> Bool
+anyPass = (or .) . sequence

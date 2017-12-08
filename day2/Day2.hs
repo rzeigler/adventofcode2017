@@ -5,7 +5,7 @@ import Debug.Trace (trace)
 import Control.Applicative ((<|>))
 import Data.List (find, tails)
 import Data.Text (Text, splitOn, unpack, pack)
-import Lib (Parseable(parse), multisolve, allPass)
+import Lib (multisolve, allPass)
 
 splitRows :: Text -> [Text]
 splitRows = splitOn (pack "\n")
@@ -16,8 +16,8 @@ splitCells = splitOn (pack "\t")
 parseCell :: Text -> Int
 parseCell = read . unpack
 
-instance Parseable [[Int]] where
-  parse = fmap (fmap parseCell . splitCells) . splitRows
+parse :: Text -> Either () [[Int]]
+parse = Right . fmap (fmap parseCell . splitCells) . splitRows
      
 diff :: [Int] -> Int
 diff cells = maximum cells - minimum cells
@@ -40,4 +40,4 @@ solve2 :: [[Int]] -> Int
 solve2 rows = maybe (negate 1) sum (traverse findRowValue rows)
 
 run :: IO ()
-run = multisolve [solve1, solve2]
+run = multisolve parse [solve1, solve2]
