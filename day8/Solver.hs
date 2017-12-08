@@ -47,14 +47,10 @@ num :: Parser Int
 num = (char '-' *> ((negate . read) <$> many1 digit))
   <|> (read <$> many1 digit)
 
--- op :: Parser Op
 op :: Parser Adjust
 op = ((+) <$> (trim (string "inc") *> num))
   <|> (subtract <$> (trim (string "dec") *> num))
 
--- op = (((+) . read) <$> (trim (string "inc") *> num))
---   <|> ((subtract . read) <$> (trim (string "dec") *> num))
-  
 comparison :: Parser Comparison
 comparison = (string "==" $> (==))
   <|> (string "!=" $> (/=))
