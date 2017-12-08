@@ -32,7 +32,7 @@ renderLine :: (Int, Text) -> Text
 renderLine (part, t) = foldl append (pack "Part ") [showt part, pack " = ", t]
 
 render :: TextShow a => [a] -> Text
-render as = unlines $ renderLine <$> zip [0..] (showt <$> as)
+render as = unlines $ renderLine <$> zip [1..] (showt <$> as)
 
 solve :: [a -> b] -> a -> [b]
 solve solns = (solns <*>) . return

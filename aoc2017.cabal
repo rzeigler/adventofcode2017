@@ -121,6 +121,7 @@ executable day8
                      , aoc2017
                      , parsec
                      , mtl
+                     , containers
   default-language:    Haskell2010
 
 -- test-suite aoc2017-test
