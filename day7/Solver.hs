@@ -107,7 +107,7 @@ getNodeSiblings sibling = do
 hasChildren :: Text -> Reader Data Bool
 hasChildren = fmap (not . null) . getNodeChildren
 
-correction :: Text -> Reader Data Int
+correction :: Text -> Reader Data (Text, Int)
 correction node = do
   sibs <- getNodeSiblings node
   weight <- getNodeWeight node
@@ -118,15 +118,15 @@ correction node = do
   let sibTots = uncurry (+) <$> sibStats
   let mismatched = filter (/= weight + descendantWeight) sibTots
   case mismatched of
-    f:_:_ -> return (f - descendantWeight)
-    _ -> return 0
+    f:_:_ -> return (node, f - descendantWeight)
+    _ -> return (node, 0)
 
 impl2 :: Reader Data Text
 impl2 = do
   nodes <- asks getNodes
   internal <- filterM hasChildren nodes
   corrections <- traverse correction internal
-  let candidates = filter (0<) corrections
+  let candidates = filter ((0<) . snd) corrections
   return (unwords $ fmap showt candidates)
 
 solve2 :: Either ParseError [InputLine] -> FromStringShow (Either ParseError Text)
