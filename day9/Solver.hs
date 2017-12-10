@@ -12,13 +12,14 @@ import Text.Parsec.Text (Parser)
 import Text.Parsec.Combinator (sepBy, option)
 import Lib(Parsecable(..), parsecer, multisolve)
 
-data Group = Garbage | Group [Group]
+data Group = Garbage Int | Group [Group]
 
 escaped :: Parser Char
 escaped = char '!' *> anyChar
 
 garbage :: Parser Group
-garbage = char '<' *> many (escaped <|> noneOf ">") *> char '>' $> Garbage
+-- garbage = char '<' *> many (escaped <|> noneOf ">") *> char '>' $> Garbage
+garbage = char '<' *> ((Garbage . sum) <$> many ((escaped $> 0) <|> (noneOf ">" $> 1))) <* char '>'
 
 contents :: Parser [Group]
 contents = sepBy (group <|> garbage) (char ',')
@@ -29,14 +30,21 @@ group = Group <$> (char '{' *> contents <* char '}')
 instance Parsecable Group where
   parsec = group <* eof
 
-score :: Int -> Group -> Int
-score base Garbage = 0
-score base (Group children) = 
+scoreGroups :: Int -> Group -> Int
+scoreGroups base (Garbage _) = 0
+scoreGroups base (Group children) = 
   let current = 1 + base in 
-    current + sum (fmap (score current) children)
+    current + sum (fmap (scoreGroups current) children)
+    
+countGarbage :: Group -> Int
+countGarbage (Group children) = sum (countGarbage <$> children)
+countGarbage (Garbage int) = int
 
 solve1 :: Group -> Int
-solve1 = score 0
+solve1 = scoreGroups 0
+
+solve2 :: Group -> Int
+solve2 = countGarbage
 
 run :: IO ()
-run = multisolve parsecer [solve1]
+run = multisolve parsecer [solve1, solve2]
