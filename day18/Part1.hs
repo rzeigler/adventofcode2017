@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
-module Solver 
+module Part1 
   ( run
   ) where
 
