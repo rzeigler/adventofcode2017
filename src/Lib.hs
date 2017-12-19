@@ -2,6 +2,7 @@
 module Lib
     ( Parsecable(..)
     , multisolve
+    , multisolve'
     , parsecer
     , aperture
     , allPass 
@@ -42,6 +43,12 @@ multisolve load solns = interact $
   either showt render .
   fmap ((solns <*>) . return) .
   load . strip
+  
+multisolve' :: TextShow e => TextShow b => (Text -> Either e a) -> [a -> b] -> IO ()
+multisolve' load solns = interact $
+  either showt render .
+  fmap ((solns <*>) . return) .
+  load
   
 parsecer :: Parsecable a => Text -> Either (FromStringShow ParseError) a
 parsecer text = first FromStringShow $ parse parsec "" text
