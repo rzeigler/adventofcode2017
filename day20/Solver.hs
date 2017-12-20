@@ -7,7 +7,7 @@ module Solver
 import TextShow (FromStringShow(..))
 import GHC.Exts (sortWith)
 import Data.Functor
-import Text.Parsec (char, string, spaces, option, many1, digit, sepBy1, newline)
+import Text.Parsec (char, string, spaces, option, many1, digit, sepBy1, newline, eof)
 import Text.Parsec.Text (Parser)
 import Debug.Trace
 import Lib(multisolve, Parsecable(..), parsecer)
@@ -38,15 +38,15 @@ mkParticle p v a = Particle {getPosition = p, getVelocity = v, getAccel = a}
 commaSpace = string ", "
 
 particle :: Parser Particle
-particle = (mkParticle <$> (string "p=" *> vec <* commaSpace) <*> (string "v=" *> vec <* commaSpace) <*> (string "a=" *> vec)) <* spaces
+particle = mkParticle <$> (string "p=" *> vec <* commaSpace) <*> (string "v=" *> vec <* commaSpace) <*> (string "a=" *> vec)
 
 particles = sepBy1 particle newline
 
 instance Parsecable [Particle] where
-  parsec = particles
+  parsec = particles <* eof
 
 solve1 :: [Particle] -> FromStringShow (Int, Particle)
-solve1 particles = FromStringShow $ head $ sortWith (getAccel . snd) (traceShowId named)
+solve1 particles = FromStringShow $ head $ sortWith (getAccel . snd) named
   where named = zip [0..] particles :: [(Int, Particle)]
 
 run :: IO ()
